@@ -1,0 +1,105 @@
+import java.util.Random;
+
+class SharedData {
+    int number;
+    boolean isEven; // Flag to track if the number is even or odd
+    boolean newNumber = false; // Flag to ensure other threads wait until a new number is generated
+}
+
+class RandomNumberGenerator extends Thread {
+    SharedData sharedData;
+
+    public RandomNumberGenerator(SharedData sharedData) {
+        this.sharedData = sharedData;
+    }
+
+    @Override
+    public void run() {
+        Random rand = new Random();
+        while (true) {
+            synchronized (sharedData) {
+                if (!sharedData.newNumber) {
+                    int num = rand.nextInt(100); // Generate a random number between 0 and 99
+                    System.out.println("Generated number: " + num);
+                    sharedData.number = num;
+                    sharedData.isEven = (num % 2 == 0);
+                    sharedData.newNumber = true;
+                    sharedData.notifyAll(); // Notify waiting threads
+                }
+            }
+            try {
+                Thread.sleep(1000); // Sleep for 1 second
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
+
+class SquareCalculator extends Thread {
+    SharedData sharedData;
+
+    public SquareCalculator(SharedData sharedData) {
+        this.sharedData = sharedData;
+    }
+
+    @Override
+    public void run() {
+        while (true) {
+            synchronized (sharedData) {
+                try {
+                    while (!sharedData.newNumber || !sharedData.isEven) {
+                        sharedData.wait(); // Wait for a new even number to be generated
+                    }
+                    int square = sharedData.number * sharedData.number;
+                    System.out.println("Square of " + sharedData.number + ": " + square);
+                    sharedData.newNumber = false;
+                    sharedData.notifyAll(); // Notify the generator to produce the next number
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+}
+
+class CubeCalculator extends Thread {
+    SharedData sharedData;
+
+    public CubeCalculator(SharedData sharedData) {
+        this.sharedData = sharedData;
+    }
+
+    @Override
+    public void run() {
+        while (true) {
+            synchronized (sharedData) {
+                try {
+                    while (!sharedData.newNumber || sharedData.isEven) {
+                        sharedData.wait(); // Wait for a new odd number to be generated
+                    }
+                    int cube = sharedData.number * sharedData.number * sharedData.number;
+                    System.out.println("Cube of " + sharedData.number + ": " + cube);
+                    sharedData.newNumber = false;
+                    sharedData.notifyAll(); // Notify the generator to produce the next number
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+}
+
+public class MultiThreadedNumberProcessor {
+    public static void main(String[] args) {
+        SharedData sharedData = new SharedData();
+
+        RandomNumberGenerator generator = new RandomNumberGenerator(sharedData);
+        SquareCalculator squareCalculator = new SquareCalculator(sharedData);
+        CubeCalculator cubeCalculator = new CubeCalculator(sharedData);
+
+        generator.start();
+        squareCalculator.start();
+        cubeCalculator.start();
+    }
+}
