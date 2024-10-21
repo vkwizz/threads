@@ -1,0 +1,83 @@
+import java.util.Scanner;
+
+public class QuickSort {
+
+    // Method to perform QuickSort
+    public static void quickSort(int[] arr, int low, int high) {
+        if (low < high) {
+            // Find the pivot element
+            int pi = partition(arr, low, high);
+
+            // Recursively sort elements before and after partition
+            quickSort(arr, low, pi - 1);
+            quickSort(arr, pi + 1, high);
+        }
+    }
+
+    // Partition method to place the pivot element at correct position
+    public static int partition(int[] arr, int low, int high) {
+        // Choosing the rightmost element as the pivot
+        int pivot = arr[high];
+
+        // Pointer for the greater element
+        int i = (low - 1); // Index of smaller element
+
+        // Traverse through all elements and compare with pivot
+        for (int j = low; j < high; j++) {
+            if (arr[j] < pivot) {
+                i++;
+
+                // Swap arr[i] with arr[j]
+                int temp = arr[i];
+                arr[i] = arr[j];
+                arr[j] = temp;
+            }
+        }
+
+        // Swap the pivot element with the element at i+1
+        int temp = arr[i + 1];
+        arr[i + 1] = arr[high];
+        arr[high] = temp;
+
+        return i + 1;
+    }
+
+    // Utility method to print the array
+    public static void printArray(int[] arr) {
+        for (int i : arr) {
+            System.out.print(i + " ");
+        }
+        System.out.println();
+    }
+
+    // Main method to take input from user and perform QuickSort
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        // Input the number of elements
+        System.out.print("Enter the number of elements: ");
+        int n = scanner.nextInt();
+
+        // Create an array based on the input size
+        int[] arr = new int[n];
+
+        // Input elements from the user
+        System.out.println("Enter the elements:");
+        for (int i = 0; i < n; i++) {
+            arr[i] = scanner.nextInt();
+        }
+
+        // Display the original array
+        System.out.println("Original Array:");
+        printArray(arr);
+
+        // Perform QuickSort
+        quickSort(arr, 0, n - 1);
+
+        // Display the sorted array
+        System.out.println("Sorted Array:");
+        printArray(arr);
+
+        scanner.close();
+    }
+}
